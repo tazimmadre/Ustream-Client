@@ -1,7 +1,8 @@
 import React from "react";
+import { connect } from "react-redux";
+import { signIn, signOut } from "../actions";
 
 class GoogleAuth extends React.Component {
-  state = { isSignedIn: null };
   componentDidMount() {
     window.gapi.load("client:auth2", () => {
       window.gapi.client
@@ -12,19 +13,20 @@ class GoogleAuth extends React.Component {
         })
         .then(() => {
           this.auth = window.gapi.auth2.getAuthInstance();
-           this.setState({
-             isSignedIn: this.auth.isSignedIn.get(),
-           });
+          this.onAuthChange(this.auth.isSignedIn.get());
           this.auth.isSignedIn.listen(this.onAuthChange);
           console.log(this.auth);
         });
     });
   }
-  onAuthChange=()=>{
-    this.setState({
-      isSignedIn: this.auth.isSignedIn.get(),
-    })
-          };
+  onAuthChange = (isSignedIn) => {
+    if (isSignedIn){
+      this.props.signIn(this.auth.currentUser.get().getId());
+    }
+    else{
+      this.props.signOut();
+    } 
+  };
   renderSignin() {
     return (
       <button onClick={this.auth.signIn} className="ui google red button">
@@ -33,28 +35,28 @@ class GoogleAuth extends React.Component {
     );
   }
   renderSignout() {
-    return (<button onClick={this.auth.signOut} className="ui google button">
-      <i className="sign out alternate icon"></i>
-      SignOut</button>);
+    return (
+      <button onClick={this.auth.signOut} className="ui google button">
+        <i className="sign out alternate icon"></i>
+        SignOut
+      </button>
+    );
   }
   render() {
-    if (this.state.isSignedIn === null) return (
-      // <div className="ui active dimmer">
-        <div className="ui active inline loader"></div>
-      // </div>
-    );
-    else if (this.state.isSignedIn) 
-      return (
-        <div> 
-          {this.renderSignout()}
-        </div>);
-    else if (this.state.isSignedIn === false)
-      return (
-        <div>
-          {this.renderSignin()} 
-        </div>
-      );
+    if (this.props.isSignedIn === null)
+      return null;
+      // (
+      //   // <div className="ui active dimmer">
+      //   <div className="ui active inline loader"></div>
+      //   // </div>
+      // );
+    else if (this.props.isSignedIn) return <div>{this.renderSignout()}</div>;
+    else 
+      return <div>{this.renderSignin()}</div>;
   }
 }
 
-export default GoogleAuth;
+const mapStateToProps = (state) => {
+  return { isSignedIn: state.auth.isSignedIn };
+};
+export default connect(mapStateToProps, { signIn, signOut })(GoogleAuth);
