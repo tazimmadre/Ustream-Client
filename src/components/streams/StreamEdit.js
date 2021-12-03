@@ -1,7 +1,64 @@
 import React from "react";
+import {Field,reduxForm} from "redux-form";
+import {connect} from "react-redux";
+import {createStream} from "../../actions";
+class StreamEdit extends React.Component {
+  renderError=({error,touched})=>{
+    if(touched && error){
+      return (<div className="ui pointing red basic label">
+       
+        {error}
 
-const StreamEdit = () => {
-  return <div>StreamEdit</div>;
+        </div>);
+    }
+  }
+  renderInput=({input,label,meta})=>{
+    const className=`field ${meta.error && meta.touched ?'error':''}`
+    return (
+      <div className={className}>
+        <label>{label}</label>
+        <input {...input}/>
+        {this.renderError(meta)}
+      </div>
+    );
+  }
+  onSubmit=(formValues)=>{
+    this.props.createStream(formValues);
+  }
+  render() {
+    return (
+      <form className="ui form" onSubmit={this.props.handleSubmit(this.onSubmit)}>
+        <Field
+          name="title"
+          component={this.renderInput}
+          label="Enter Title"
+        />
+        <Field
+          name="description"
+          component={this.renderInput}
+          label="Enter Description"
+        />
+        <button className="ui button primary">Submit</button>
+      </form>
+    );
+  }
 };
 
-export default StreamEdit;
+const validate=(formValues)=>{
+  const errors={};
+  if(!formValues.title){
+    errors.title="You must Enter a title"
+  }
+  if (!formValues.description) {
+    errors.description = "You must Enter a description";
+  }
+  return errors;
+}
+
+const formWrapped=reduxForm({
+  form:'streamEdit',
+  validate:validate
+})(StreamEdit);
+
+
+export default connect(null,{createStream})(formWrapped);
