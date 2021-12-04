@@ -1,64 +1,34 @@
 import React from "react";
-import {Field,reduxForm} from "redux-form";
-import {connect} from "react-redux";
-import {createStream} from "../../actions";
+import {connect } from "react-redux";
+import {fetchStream,editStream} from "../../actions";
+import StreamForm from "./StreamForm";
 class StreamEdit extends React.Component {
-  renderError=({error,touched})=>{
-    if(touched && error){
-      return (<div className="ui pointing red basic label">
-       
-        {error}
-
-        </div>);
-    }
+  componentDidMount() {
+    this.props.fetchStream(this.props.match.params.id);
   }
-  renderInput=({input,label,meta})=>{
-    const className=`field ${meta.error && meta.touched ?'error':''}`
-    return (
-      <div className={className}>
-        <label>{label}</label>
-        <input {...input}/>
-        {this.renderError(meta)}
-      </div>
-    );
-  }
-  onSubmit=(formValues)=>{
-    this.props.createStream(formValues);
+  onSubmit=(formValues)=> {
+    this.props.editStream(formValues, this.props.match.params.id);
   }
   render() {
+    // console.log(this.props);
+    if (!this.props.stream) {
+      return <div>Loading...</div>;
+    }
     return (
-      <form className="ui form" onSubmit={this.props.handleSubmit(this.onSubmit)}>
-        <Field
-          name="title"
-          component={this.renderInput}
-          label="Enter Title"
+      <div>
+        <h3>Edit a Stream</h3>
+        <StreamForm
+         initialValues={this.props.stream}
+         onSubmit={this.onSubmit}
         />
-        <Field
-          name="description"
-          component={this.renderInput}
-          label="Enter Description"
-        />
-        <button className="ui button primary">Submit</button>
-      </form>
+      </div>
     );
   }
 };
 
-const validate=(formValues)=>{
-  const errors={};
-  if(!formValues.title){
-    errors.title="You must Enter a title"
-  }
-  if (!formValues.description) {
-    errors.description = "You must Enter a description";
-  }
-  return errors;
-}
-
-const formWrapped=reduxForm({
-  form:'streamEdit',
-  validate:validate
-})(StreamEdit);
+const mapStateToProps=(state,ownProps)=>{
+  return {stream:state.stream[ownProps.match.params.id]}
+};
 
 
-export default connect(null,{createStream})(formWrapped);
+export default connect(mapStateToProps, { fetchStream ,editStream})(StreamEdit);
